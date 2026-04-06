@@ -1,5 +1,5 @@
 const CACHE  = "dive-transfer-v1";
-const ASSETS = ["/", "/index.html", "/app.js", "/fit-parser.js", "/ssi-builder.js", "/usb-serial.js", "/manifest.json"];
+const ASSETS = ["./", "./index.html", "./app.js", "./fit-parser.js", "./ssi-builder.js", "./usb-serial.js", "./manifest.json"];
 
 // Install: cache all static assets
 self.addEventListener("install", e => {
@@ -28,7 +28,7 @@ self.addEventListener("fetch", e => {
         const buf = await file.arrayBuffer();
         await saveSharedFile(buf, file.name);
       }
-      return Response.redirect("/?shared=1", 303);
+      return Response.redirect("./index.html?shared=1", 303);
     })());
     return;
   }
