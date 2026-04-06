@@ -1,0 +1,92 @@
+# ── KiCad ─────────────────────────────────────────────────────
+# Auto-save and recovery
+*-backups/
+*.kicad_prl
+*.000
+*.bak
+*.bck
+_autosave-*
+
+# KiCad local settings (machine-specific)
+fp-info-cache
+*.kicad_prl
+
+# Fabrication outputs (generated, not source)
+hardware/pcb/gerbers/
+hardware/pcb/bom/
+hardware/pcb/*.zip
+hardware/pcb/*.csv
+hardware/pcb/*.pos
+hardware/pcb/*.drl
+hardware/pcb/*.gbr
+hardware/pcb/*.gbl
+hardware/pcb/*.gbo
+hardware/pcb/*.gbp
+hardware/pcb/*.gbs
+hardware/pcb/*.gko
+hardware/pcb/*.gtl
+hardware/pcb/*.gto
+hardware/pcb/*.gtp
+hardware/pcb/*.gts
+
+# ── C / C++ (Arduino / ESP) ────────────────────────────────────
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+
+# Arduino build cache
+build/
+.arduino15/
+
+# ── JavaScript / Node ──────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.pnpm-store
+dist/
+.cache/
+
+# ── 3D Prints ──────────────────────────────────────────────────
+# Keep STLs and source files, ignore slicer output
+*.gcode
+*.bgcode
+*.3mf.bak
+hardware/3d-prints/slicer-projects/
+
+# ── OS ─────────────────────────────────────────────────────────
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.fuse_hidden*
+.Trash-*
+
+# ── Editors ────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# ── Misc ───────────────────────────────────────────────────────
+*.log
+*.tmp
+secrets.js
+config.local.js

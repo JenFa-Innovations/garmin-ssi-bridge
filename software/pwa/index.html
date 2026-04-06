@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <meta name="theme-color" content="#0e0e10"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>Dive Transfer</title>
+  <link rel="manifest" href="/manifest.json"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0e0e10;
+      --bg2:     #14141c;
+      --bg3:     #1a1a24;
+      --border:  #22222e;
+      --blue:    #0055ff;
+      --blue-dk: #003acc;
+      --green:   #00aa44;
+      --text:    #f0f0f4;
+      --text2:   #8888aa;
+      --text3:   #3a3a50;
+    }
+
+    html, body {
+      height: 100%; background: var(--bg); color: var(--text);
+      font-family: -apple-system, 'Helvetica Neue', sans-serif;
+      font-size: 16px; line-height: 1.4; overflow: hidden;
+    }
+
+    /* ── App Shell ─────────────────────────────────────────────── */
+    #app {
+      height: 100%; display: flex; flex-direction: column;
+      max-width: 430px; margin: 0 auto;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* ── Status Bar ─────────────────────────────────────────────── */
+    #statusBar {
+      padding: 10px 20px 0;
+      font-size: 12px; color: var(--text3); font-weight: 600;
+      display: flex; justify-content: space-between; flex-shrink: 0;
+    }
+
+    /* ── Screens ────────────────────────────────────────────────── */
+    .screen {
+      flex: 1; flex-direction: column; overflow-y: auto;
+      padding: 16px 20px 12px; display: none;
+    }
+
+    /* ── Status Message ─────────────────────────────────────────── */
+    #statusMsg {
+      padding: 8px 20px; font-size: 12px; color: var(--text3);
+      min-height: 32px; flex-shrink: 0;
+    }
+
+    /* ── Components ─────────────────────────────────────────────── */
+    .hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .hdr-title { font-size: 17px; font-weight: 600; }
+    .hdr-back {
+      background: none; border: none; color: var(--blue);
+      font-size: 26px; cursor: pointer; padding: 0; line-height: 1;
+    }
+    .badge {
+      margin-left: auto; font-size: 10px; color: var(--blue);
+      background: #001133; padding: 3px 8px; border-radius: 6px; font-weight: 700;
+    }
+
+    .label {
+      font-size: 10px; color: var(--text3); font-weight: 700;
+      letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px;
+    }
+    .input {
+      width: 100%; padding: 12px 14px; background: var(--bg2);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-size: 15px; outline: none;
+      -webkit-appearance: none;
+    }
+
+    .btn {
+      width: 100%; padding: 15px; border: none; border-radius: 14px;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      background: linear-gradient(135deg, var(--blue-dk), var(--blue));
+      color: #fff; box-shadow: 0 4px 20px rgba(0,80,255,0.2);
+      transition: opacity 0.15s;
+    }
+    .btn:active { opacity: 0.8; }
+    .btn-secondary {
+      background: var(--bg2); border: 1px solid var(--border);
+      color: var(--text2); box-shadow: none;
+    }
+    .btn-ghost {
+      background: none; border: 1px solid var(--border);
+      color: var(--blue); box-shadow: none;
+    }
+    .btn-green { background: linear-gradient(135deg, #003300, var(--green)); }
+    .btn-sm { padding: 10px 14px; font-size: 13px; border-radius: 12px; }
+
+    .card {
+      background: linear-gradient(135deg, #0a1830, #070f22);
+      border: 1px solid #0d2050; border-radius: 18px; padding: 18px;
+      margin-bottom: 12px;
+    }
+    .card-date {
+      font-size: 10px; color: var(--blue); font-weight: 700;
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px;
+    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; }
+    .grid-item-label { font-size: 10px; color: #2a3a5a; margin-bottom: 2px; }
+    .grid-item-value { font-size: 20px; font-weight: 700; color: #e0e8ff; }
+
+    .info-box {
+      background: #0a100a; border: 1px solid #142014;
+      border-radius: 10px; padding: 10px;
+      font-size: 11px; color: #2a4a2a; line-height: 1.7;
+    }
+    .info-box.blue { background: #050d1a; border-color: #0d1f40; color: #1a3a6a; }
+
+    .divider {
+      display: flex; align-items: center; gap: 10px; margin: 14px 0;
+    }
+    .divider::before, .divider::after {
+      content: ""; flex: 1; height: 1px; background: var(--border);
+    }
+    .divider span { font-size: 11px; color: var(--text3); }
+
+    /* ── Idle ────────────────────────────────────────────────────── */
+    #idleCenter {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+    }
+    .dive-icon {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #002060, #000d2e);
+      border: 1px solid rgba(0,51,170,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 44px; box-shadow: 0 0 50px rgba(0,60,200,0.1);
+    }
+    .idle-hint { text-align: center; line-height: 1.7; }
+    .idle-hint-main { font-size: 15px; color: #ccc; font-weight: 500; }
+    .idle-hint-sub  { font-size: 13px; color: var(--text3); }
+    .idle-hint-link { color: var(--blue); }
+
+    .status-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px; background: #0e0e14;
+      border-radius: 12px; border: 1px solid #18181e;
+    }
+    .dot { width: 6px; height: 6px; border-radius: 3px; flex-shrink: 0; }
+    .dot-green { background: #1a7a1a; }
+    .status-chip-text { font-size: 11px; color: var(--text3); }
+
+    /* ── QR Screen ───────────────────────────────────────────────── */
+    #qrBox {
+      background: #fff; border-radius: 18px; padding: 16px;
+      display: flex; align-items: center; justify-content: center;
+      flex: 1; margin-bottom: 10px;
+    }
+    #ssiPreview {
+      background: #0a0a10; border: 1px solid #14141e;
+      border-radius: 10px; padding: 10px; margin-bottom: 10px;
+      font-family: monospace; font-size: 9px; color: #2a4a2a;
+      word-break: break-all; line-height: 1.8; max-height: 70px; overflow: hidden;
+    }
+
+    /* ── NFC Write Button ────────────────────────────────────────── */
+    #btnWriteNfc {
+      background: #0d1428; border: 1px solid #1a2a50;
+      color: #4488cc; margin-top: 8px;
+    }
+
+    /* ── Camera Overlay ──────────────────────────────────────────── */
+    #scanOverlay {
+      display: none; position: fixed; inset: 0; background: #000;
+      z-index: 100; flex-direction: column;
+    }
+    #scanOverlay header {
+      padding: 14px 20px; display: flex; align-items: center; gap: 10px;
+    }
+    #scanVideo { width: 100%; flex: 1; object-fit: cover; }
+    #scanCanvas { display: none; }
+    .scan-frame {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px; height: 200px;
+      border: 2px solid var(--blue); border-radius: 12px;
+      box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+    }
+
+    input[type="file"] { display: none; }
+
+    /* Gaps */
+    .gap8  { margin-bottom: 8px; }
+    .gap12 { margin-bottom: 12px; }
+    .gap16 { margin-bottom: 16px; }
+    .spacer { flex: 1; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div id="statusBar">
+    <span id="clock"></span>
+    <span>●●●</span>
+  </div>
+
+  <!-- ── IDLE ──────────────────────────────────────────────────── -->
+  <div id="screen-idle" class="screen">
+    <div class="hdr">
+      <div>
+        <div class="label" style="color:var(--blue);letter-spacing:2.5px">GARMIN → SSI</div>
+        <div style="font-size:28px;font-weight:700;letter-spacing:-0.5px">Dive Transfer</div>
+      </div>
+      <button id="btnSettings" class="hdr-back" style="font-size:18px;color:var(--text3);margin-left:auto">⚙</button>
+    </div>
+
+    <div id="idleCenter">
+      <div class="dive-icon">🤿</div>
+      <div class="idle-hint">
+        <div class="idle-hint-main">In Garmin Dive app:</div>
+        <div class="idle-hint-sub">
+          Open dive → ··· →
+          <span class="idle-hint-link">Export as FIT</span><br>
+          App appears automatically in share sheet
+        </div>
+      </div>
+      <button id="btnPick" class="btn">📂  Select FIT file manually</button>
+      <button id="btnUsb" class="btn btn-ghost btn-sm" style="width:auto;padding:10px 20px">
+        🔌 Connect ESP (WebUSB)
+      </button>
+    </div>
+
+    <div class="status-chip">
+      <div class="dot dot-green"></div>
+      <span class="status-chip-text" id="chipText">Ready · hold NFC tag to open</span>
+    </div>
+
+    <input type="file" id="filePicker" accept=".fit,*/*">
+  </div>
+
+  <!-- ── RESULT ─────────────────────────────────────────────────── -->
+  <div id="screen-result" class="screen">
+    <div class="hdr">
+      <button class="hdr-back" onclick="showScreenGlobal('idle')">‹</button>
+      <div class="hdr-title">Tauchgang erkannt</div>
+      <div class="badge">MK3i</div>
+    </div>
+
+    <div class="card">
+      <div class="card-date" id="diveDate">—</div>
+      <div class="grid2">
+        <div><div class="grid-item-label">📉 Max. Tiefe</div><div class="grid-item-value" id="diveDepth">—</div></div>
+        <div><div class="grid-item-label">⏱ Dauer</div><div class="grid-item-value" id="diveDuration">—</div></div>
+        <div><div class="grid-item-label">🌡 Wassertemp</div><div class="grid-item-value" id="diveWaterTemp">—</div></div>
+        <div><div class="grid-item-label">☀️ Lufttemp</div><div class="grid-item-value" id="diveAirTemp">—</div></div>
+        <div><div class="grid-item-label">🌊 Max. Temp</div><div class="grid-item-value" id="diveMaxTemp">—</div></div>
+      </div>
+    </div>
+
+    <button id="btnDetails" class="btn btn-secondary btn-sm gap12" style="display:flex;justify-content:space-between;align-items:center">
+      <span>⚙  Tauchplatz · Wetter · Sicht</span><span style="color:var(--text3)">›</span>
+    </button>
+
+    <button id="btnSend" class="btn">📡  An ESP senden → QR</button>
+    <div style="font-size:11px;color:var(--text3);text-align:center;margin-top:8px">
+      Kein ESP → QR direkt am Handy anzeigen
+    </div>
+  </div>
+
+  <!-- ── DETAILS ────────────────────────────────────────────────── -->
+  <div id="screen-details" class="screen">
+    <div class="hdr">
+      <button id="btnDetailsBack" class="hdr-back">‹</button>
+      <div class="hdr-title">Details</div>
+      <div style="font-size:11px;color:var(--text3);margin-left:4px">optional</div>
+    </div>
+
+    <div class="gap16">
+      <div class="label">Tauchplatz-ID (SSI)</div>
+      <input id="inputSite" class="input" placeholder="z.B. 83913">
+    </div>
+    <div class="gap16">
+      <div class="label">Sichtweite (m)</div>
+      <input id="inputVis" class="input" placeholder="z.B. 20.0">
+    </div>
+
+    <div class="label" style="margin-bottom:10px">Bedingungen (Enum-IDs)</div>
+    <div class="grid2 gap16">
+      <div><div class="label">Wetter</div><input id="inputWeather"   class="input" value="1"></div>
+      <div><div class="label">Einstieg</div><input id="inputEntry"    class="input" value="35"></div>
+      <div><div class="label">Gewässer</div><input id="inputWaterBody" class="input" value="52"></div>
+      <div><div class="label">Wassertyp</div><input id="inputWaterType" class="input" value="4"></div>
+      <div><div class="label">Strömung</div><input id="inputCurrent"  class="input" value="6"></div>
+      <div><div class="label">Oberfläche</div><input id="inputSurface" class="input" value="10"></div>
+      <div><div class="label">Tauchtyp</div><input id="inputDiveType" class="input" value="24"></div>
+    </div>
+
+    <div class="info-box gap16">
+      💡 IDs aus deinem echten QR vorbelegt. Tauchplatz-ID in SSI App unter dem Spot.
+    </div>
+
+    <button id="btnDetailsSend" class="btn">📡  Senden</button>
+  </div>
+
+  <!-- ── QR ─────────────────────────────────────────────────────── -->
+  <div id="screen-qr" class="screen">
+    <div class="hdr">
+      <button id="btnQrBack" class="hdr-back">‹</button>
+      <div class="hdr-title">QR Code</div>
+      <div class="badge">SSI</div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px">
+      Mit SSI App scannen →
+    </div>
+
+    <div id="qrBox">
+      <div id="qrCanvas"></div>
+    </div>
+
+    <div id="ssiPreview"></div>
+
+    <div class="info-box">
+      ✓ Real SSI string — ready to scan
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ───────────────────────────────────────────────── -->
+  <div id="screen-settings" class="screen">
+    <div class="hdr">
+      <button id="btnSettingsBack" class="hdr-back">‹</button>
+      <div class="hdr-title">SSI Profile</div>
+    </div>
+
+    <!-- Primary: scan from screenshot -->
+    <button id="btnScanImage" class="btn gap8" style="background:#0d1a30;border:1px solid #0d2050;color:#4499ff;box-shadow:none;display:flex;align-items:center;justify-content:center;gap:8px">
+      <span style="font-size:20px">🖼️</span>
+      <span>Scan QR from screenshot</span>
+    </button>
+    <div style="font-size:11px;color:var(--text3);margin-top:-4px;margin-bottom:10px;text-align:center">
+      SSI app → Profile → show QR → screenshot → select here
+    </div>
+    <input type="file" id="qrImagePicker" accept="image/*" style="display:none">
+
+    <!-- Fallback: live camera -->
+    <button id="btnScanQr" class="btn btn-sm gap8" style="background:#0a0a14;border:1px solid #1a1a28;color:#334466;box-shadow:none">
+      📷  Scan with camera instead
+    </button>
+
+    <!-- NFC -->
+    <button id="btnWriteNfc" class="btn btn-sm gap16" style="background:#0d1428;border:1px solid #1a2a50;color:#4488cc;box-shadow:none">
+      📡  Write NFC tag with app URL
+    </button>
+
+    <div class="divider"><span>or enter manually</span></div>
+
+    <div class="gap12">
+      <div class="label">SSI User-ID</div>
+      <input id="inputUserId" class="input gap8" placeholder="e.g. 123456">
+      <div style="font-size:10px;color:var(--text3)">Found in your SSI profile QR code</div>
+    </div>
+    <div class="gap12">
+      <div class="label">First name</div>
+      <input id="inputFirstName" class="input" placeholder="John">
+    </div>
+    <div class="gap16">
+      <div class="label">Last name</div>
+      <input id="inputLastName" class="input" placeholder="Doe">
+    </div>
+
+    <div class="spacer"></div>
+    <button id="btnSaveProfile" class="btn" style="margin-top:16px">Save</button>
+  </div>
+
+  <!-- ── Status Message ─────────────────────────────────────────── -->
+  <div id="statusMsg" id="status"></div>
+
+</div>
+
+<!-- ── Camera Overlay ─────────────────────────────────────────── -->
+<div id="scanOverlay">
+  <header>
+    <button id="btnStopScan" style="background:none;border:none;color:var(--blue);font-size:26px;cursor:pointer">‹</button>
+    <span style="font-size:17px;font-weight:600;color:#fff">Scan profile QR</span>
+  </header>
+  <div style="position:relative;flex:1">
+    <video id="scanVideo" muted playsinline></video>
+    <canvas id="scanCanvas"></canvas>
+    <div class="scan-frame"></div>
+    <div style="position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:13px;color:rgba(255,255,255,0.5)">
+      SSI app → Profile → show QR code
+    </div>
+  </div>
+</div>
+
+<script>
+  // Globale Helper für inline onclick
+  function showScreenGlobal(name) {
+    document.querySelectorAll(".screen").forEach(s => s.style.display = "none");
+    document.getElementById("screen-" + name).style.display = "flex";
+  }
+
+  // Uhr
+  function tick() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2,"0");
+    document.getElementById("clock").textContent = pad(now.getHours()) + ":" + pad(now.getMinutes());
+  }
+  tick(); setInterval(tick, 10000);
+
+  // Status-Shortcut
+  window.setStatus = msg => { document.getElementById("statusMsg").textContent = msg; };
+  window.showScreenGlobal = showScreenGlobal;
+</script>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>
