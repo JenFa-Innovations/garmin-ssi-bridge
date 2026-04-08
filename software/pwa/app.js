@@ -212,6 +212,17 @@ async function writeNfcTag() {
 }
 
 // ── SSI Profile QR — scan from image (primary) ────────────────
+function waitForJsQR(timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    if (window.jsQR) { resolve(); return; }
+    const start = Date.now();
+    const poll = setInterval(() => {
+      if (window.jsQR) { clearInterval(poll); resolve(); }
+      else if (Date.now() - start > timeout) { clearInterval(poll); reject(); }
+    }, 100);
+  });
+}
+
 function startImageScan() {
   const picker = document.getElementById("qrImagePicker");
   picker.value = "";
@@ -220,6 +231,13 @@ function startImageScan() {
     if (!file) return;
 
     setStatus("⏳ Reading QR from image...");
+
+    try {
+      await waitForJsQR();
+    } catch {
+      setStatus("❌ QR library failed to load — check your connection");
+      return;
+    }
 
     // Draw image onto canvas → jsQR
     const url = URL.createObjectURL(file);
@@ -233,8 +251,6 @@ function startImageScan() {
 
       const ctx  = canvas.getContext("2d");
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-      if (!window.jsQR) { setStatus("❌ QR library not loaded yet, try again"); return; }
 
       const code = window.jsQR(data.data, data.width, data.height);
       if (code) {
