@@ -233,9 +233,10 @@ function startImageScan() {
     setStatus("⏳ Reading QR from image...");
 
     try {
-      await waitForJsQR();
+      setStatus("⏳ Waiting for QR library...");
+      await waitForJsQR(8000);
     } catch {
-      setStatus("❌ QR library failed to load — check your connection");
+      setStatus("❌ QR library failed to load — check your internet connection");
       return;
     }
 
@@ -243,21 +244,24 @@ function startImageScan() {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width  = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      canvas.getContext("2d").drawImage(img, 0, 0);
       URL.revokeObjectURL(url);
 
-      const ctx  = canvas.getContext("2d");
-      const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const canvas = document.createElement("canvas");
+      const ctx    = canvas.getContext("2d");
 
-      const code = window.jsQR(data.data, data.width, data.height);
-      if (code) {
-        handleProfileQr(code.data);
-      } else {
-        setStatus("❌ No QR code found in image — try a clearer screenshot");
+      // Try multiple scales — jsQR works best around 600–1200px wide
+      const scales = [1, 2, 0.5, 1.5, 3];
+      for (const scale of scales) {
+        canvas.width  = Math.round(img.naturalWidth  * scale);
+        canvas.height = Math.round(img.naturalHeight * scale);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = window.jsQR(data.data, data.width, data.height, {
+          inversionAttempts: "attemptBoth",
+        });
+        if (code) { handleProfileQr(code.data); return; }
       }
+      setStatus("❌ No QR code found in image — try a clearer screenshot");
     };
     img.onerror = () => setStatus("❌ Could not load image");
     img.src = url;
@@ -361,9 +365,7 @@ function setStatus(msg) {
 }
 
 function loadExternalLibs() {
-  ["https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",
-   "https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"
-  ].forEach(src => {
+  ["./qrcode.js", "./jsqr.js"].forEach(src => {
     const s = document.createElement("script");
     s.src = src;
     document.head.appendChild(s);
