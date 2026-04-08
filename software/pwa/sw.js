@@ -1,5 +1,5 @@
-const CACHE  = "dive-transfer-v1";
-const ASSETS = ["./", "./index.html", "./app.js", "./fit-parser.js", "./ssi-builder.js", "./usb-serial.js", "./manifest.json"];
+const CACHE  = "dive-transfer-v2";
+const ASSETS = ["./", "./index.html", "./app.js", "./fit-parser.js", "./ssi-builder.js", "./usb-serial.js", "./manifest.json", "./qrcode.js", "./jsqr.js"];
 
 // Install: cache all static assets
 self.addEventListener("install", e => {
